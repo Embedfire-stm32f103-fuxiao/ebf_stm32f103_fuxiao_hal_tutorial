@@ -368,7 +368,7 @@ STM32F103VET6 的高级/通用定时器的 IO 分配具体见下图。
 **CH3**   PE13/PA10      PC8       PA2/PB10      PC8       PD14/PB8     PA2
 **CH3N**  PB1/PE12/PB15  PB1/PB15
 **CH4**   PE14/PA11      PC9       PA3/PB11      PC9       PD15/PB9     PA3
-**ETR**   PE7/PA12       PA0       PA0/PA5/PA15  PD2       PE0
+**ETR**   PE7/PA12       PA0       PA0/PA15  PD2       PE0
 **BKIN**  PA6/PE15/PB12  PA6
 ========  =============  ========  ============  ========  ===========  ========  
 
@@ -982,7 +982,7 @@ PWM互补输出实验
 """""""""""""""""
 
 根据开发板引脚使用情况，并且参考定时器引脚信息 ，使用TIM8的通道1及其互补通道作为本实验的波形输出通道，
-对应选择PC6和PA5引脚。将示波器的两个输入通道分别与PC6和PA5引脚短接，用于观察波形，还有注意共地。
+对应选择PC6和PA5引脚。将示波器的两个输入通道分别与PC6和PA7引脚短接，用于观察波形，还有注意共地。
 
 为增加断路功能，需要用到TIM8_BKIN引脚，这里选择PA6引脚。程序我们设置该引脚为低电平有效，
 所以先使用杜邦线将该引脚与开发板上3.3V短接。
@@ -1013,25 +1013,24 @@ PWM互补输出实验
    :caption: 宏定义
    :linenos:
 
-    /* 定时器 */
-    #define ADVANCE_TIM TIM8
-    #define ADVANCE_TIM_CLK_ENABLE() \__TIM8_CLK_ENABLE()
-    /* TIM8通道1输出引脚 */
-    #define ADVANCE_OCPWM_PIN GPIO_PIN_6
-    #define ADVANCE_OCPWM_GPIO_PORT GPIOC
-    #define ADVANCE_OCPWM_GPIO_CLK_ENABLE() \__GPIOC_CLK_ENABLE()
-    #define ADVANCE_OCPWM_AF GPIO_AF3_TIM8
+      /* 定时器 */
+      #define ADVANCE_TIM           				    TIM8
+      #define ADVANCE_TIM_CLK_ENABLE()  			  __HAL_RCC_TIM8_CLK_ENABLE()
+      
+      /* TIM1通道1输出引脚 */
+      #define ADVANCE_OCPWM_PIN           		  GPIO_PIN_6             
+      #define ADVANCE_OCPWM_GPIO_PORT     		  GPIOC                    
+      #define ADVANCE_OCPWM_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOC_CLK_ENABLE()
 
-    /* TIM8通道1互补输出引脚 */
-    #define ADVANCE_OCNPWM_PIN GPIO_PIN_5
-    #define ADVANCE_OCNPWM_GPIO_PORT GPIOA
-    #define ADVANCE_OCNPWM_GPIO_CLK_ENABLE() \__GPIOA_CLK_ENABLE()
-    #define ADVANCE_OCNPWM_AF GPIO_AF3_TIM8
-    /* TIM8断路输入引脚 */
-    #define ADVANCE_BKIN_PIN GPIO_PIN_6
-    #define ADVANCE_BKIN_GPIO_PORT GPIOA
-    #define ADVANCE_BKIN_GPIO_CLK_ENABLE() \__GPIOA_CLK_ENABLE()
-    #define ADVANCE_BKIN_AF GPIO_AF3_TIM8
+      /* TIM1通道1互补输出引脚 */
+      #define ADVANCE_OCNPWM_PIN            		GPIO_PIN_7              
+      #define ADVANCE_OCNPWM_GPIO_PORT      		GPIOA                     
+      #define ADVANCE_OCNPWM_GPIO_CLK_ENABLE()	__HAL_RCC_GPIOA_CLK_ENABLE()
+
+      /* TIM1断路输入引脚 */
+      #define ADVANCE_BKIN_PIN              		GPIO_PIN_6              
+      #define ADVANCE_BKIN_GPIO_PORT        		GPIOA                      
+      #define ADVANCE_BKIN_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOA_CLK_ENABLE()
 
 使用宏定义非常方便程序升级、移植。如果使用不同的定时器IO，修改这些宏即可。
 
@@ -1043,29 +1042,28 @@ PWM互补输出实验
 
     static void TIMx_GPIO_Config(void)
     {
-        /*定义一个GPIO_InitTypeDef类型的结构体*/
-        GPIO_InitTypeDef GPIO_InitStructure;
+      /*定义一个GPIO_InitTypeDef类型的结构体*/
+      GPIO_InitTypeDef GPIO_InitStructure;
 
-        /*开启定时器相关的GPIO外设时钟*/
-        ADVANCE_OCPWM_GPIO_CLK_ENABLE();
-        ADVANCE_OCNPWM_GPIO_CLK_ENABLE();
-        ADVANCE_BKIN_GPIO_CLK_ENABLE();
+      /*开启定时器相关的GPIO外设时钟*/
+      ADVANCE_OCPWM_GPIO_CLK_ENABLE();
+      ADVANCE_OCNPWM_GPIO_CLK_ENABLE();
+      ADVANCE_BKIN_GPIO_CLK_ENABLE(); 
 
-        /* 定时器功能引脚初始化 */
-        GPIO_InitStructure.Pin = ADVANCE_OCPWM_PIN;
-        GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStructure.Pull = GPIO_NOPULL;
-        GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-        GPIO_InitStructure.Alternate = ADVANCE_OCPWM_AF;
-        HAL_GPIO_Init(ADVANCE_OCPWM_GPIO_PORT, &GPIO_InitStructure);
+      /* 定时器功能引脚初始化 */															   
+      GPIO_InitStructure.Pin = ADVANCE_OCPWM_PIN;	
+      GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;    
+      GPIO_InitStructure.Pull = GPIO_NOPULL;
+      GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH; 	
+      HAL_GPIO_Init(ADVANCE_OCPWM_GPIO_PORT, &GPIO_InitStructure);	
 
-        GPIO_InitStructure.Pin = ADVANCE_OCNPWM_PIN;
-        GPIO_InitStructure.Alternate = ADVANCE_OCNPWM_AF;
-        HAL_GPIO_Init(ADVANCE_OCNPWM_GPIO_PORT, &GPIO_InitStructure);
-
-        GPIO_InitStructure.Pin = ADVANCE_BKIN_PIN;
-        GPIO_InitStructure.Alternate = ADVANCE_BKIN_AF;
-        HAL_GPIO_Init(ADVANCE_BKIN_GPIO_PORT, &GPIO_InitStructure);
+      GPIO_InitStructure.Pin = ADVANCE_OCNPWM_PIN;	
+      HAL_GPIO_Init(ADVANCE_OCNPWM_GPIO_PORT, &GPIO_InitStructure);
+      
+      GPIO_InitStructure.Pin = ADVANCE_BKIN_PIN;
+      GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+      GPIO_InitStructure.Pull = GPIO_NOPULL;
+      HAL_GPIO_Init(ADVANCE_BKIN_GPIO_PORT, &GPIO_InitStructure);
      }
 
 定时器通道引脚使用之前必须设定相关参数，这选择复用功能，并指定到对应的定时器。使用GPIO之前都必须开启相应端口时钟。
@@ -1078,51 +1076,51 @@ PWM互补输出实验
 
     static void TIM_Mode_Config(void)
     {
-        TIM_BreakDeadTimeConfigTypeDef TIM_BDTRInitStructure;
-        // 开启TIMx_CLK,x[1,8]
-        ADVANCE_TIM_CLK_ENABLE();
-        /* 定义定时器的句柄即确定定时器寄存器的基地址*/
-        TIM_TimeBaseStructure.Instance = ADVANCE_TIM;
-        /* 累计 TIM_Period个后产生一个更新或者中断*/
-        //当定时器从0计数到999，即为1000次，为一个定时周期
-        TIM_TimeBaseStructure.Init.Period = 1000-1;
-        // 高级控制定时器时钟源TIMxCLK = HCLK=168MHz
-        // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=1MHz
-        TIM_TimeBaseStructure.Init.Prescaler = 168-1;
-        // 采样时钟分频
-        TIM_TimeBaseStructure.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
-        // 计数方式
-        TIM_TimeBaseStructure.Init.CounterMode=TIM_COUNTERMODE_UP;
-        // 重复计数器
-        TIM_TimeBaseStructure.Init.RepetitionCounter=0;
-        // 初始化定时器TIMx, x[1,8]
-        HAL_TIM_PWM_Init(&TIM_TimeBaseStructure);
+         TIM_BreakDeadTimeConfigTypeDef TIM_BDTRInitStructure;
+         // 开启TIMx_CLK,x[1,8] 
+         ADVANCE_TIM_CLK_ENABLE(); 
+         /* 定义定时器的句柄即确定定时器寄存器的基地址*/
+         TIM_TimeBaseStructure.Instance = ADVANCE_TIM;
+         /* 累计 TIM_Period个后产生一个更新或者中断*/		
+         //当定时器从0计数到999，即为1000次，为一个定时周期
+         TIM_TimeBaseStructure.Init.Period = 1000-1;
+         // 高级控制定时器时钟源TIMxCLK = HCLK=168MHz 
+         // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=1MHz
+         TIM_TimeBaseStructure.Init.Prescaler = 72-1;	
+         // 采样时钟分频
+         TIM_TimeBaseStructure.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
+         // 计数方式
+         TIM_TimeBaseStructure.Init.CounterMode=TIM_COUNTERMODE_UP;
+         // 重复计数器
+         TIM_TimeBaseStructure.Init.RepetitionCounter=0;	
+         // 初始化定时器TIMx, x[1,8]
+         HAL_TIM_PWM_Init(&TIM_TimeBaseStructure);
 
-        /*PWM模式配置*/
-        //配置为PWM模式1
-        TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;
-        TIM_OCInitStructure.Pulse = ChannelPulse;
-        TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-        TIM_OCInitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-        TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-        TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-        //初始化通道1输出PWM
-        HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure,&TIM_OCInitStructure,TIM_CHANNEL_1);
+         /*PWM模式配置*/
+         //配置为PWM模式1
+         TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;
+         TIM_OCInitStructure.Pulse = ChannelPulse;
+         TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+         TIM_OCInitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+         TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
+         TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+         //初始化通道1输出PWM 
+         HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure,&TIM_OCInitStructure,TIM_CHANNEL_1);
 
-        /* 自动输出使能，断路、死区时间和锁定配置 */
-        TIM_BDTRInitStructure.OffStateRunMode = TIM_OSSR_ENABLE;
-        TIM_BDTRInitStructure.OffStateIDLEMode = TIM_OSSI_ENABLE;
-        TIM_BDTRInitStructure.LockLevel = TIM_LOCKLEVEL_1;
-        TIM_BDTRInitStructure.DeadTime = 11;
-        TIM_BDTRInitStructure.BreakState = TIM_BREAK_ENABLE;
-        TIM_BDTRInitStructure.BreakPolarity = TIM_BREAKPOLARITY_LOW;
-        TIM_BDTRInitStructure.AutomaticOutput = TIM_AUTOMATICOUTPUT_ENABLE;
-        HAL_TIMEx_ConfigBreakDeadTime(&TIM_TimeBaseStructure,
-        &TIM_BDTRInitStructure);
-        /* 定时器通道1输出PWM */
-        HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_1);
-        /* 定时器通道1互补输出PWM */
-        HAL_TIMEx_PWMN_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_1);
+         /* 自动输出使能，断路、死区时间和锁定配置 */
+         TIM_BDTRInitStructure.OffStateRunMode = TIM_OSSR_ENABLE;
+         TIM_BDTRInitStructure.OffStateIDLEMode = TIM_OSSI_ENABLE;
+         TIM_BDTRInitStructure.LockLevel = TIM_LOCKLEVEL_1;
+         TIM_BDTRInitStructure.DeadTime = 11;
+         TIM_BDTRInitStructure.BreakState = TIM_BREAK_ENABLE;
+         TIM_BDTRInitStructure.BreakPolarity = TIM_BREAKPOLARITY_LOW;
+         TIM_BDTRInitStructure.AutomaticOutput = TIM_AUTOMATICOUTPUT_ENABLE;
+         HAL_TIMEx_ConfigBreakDeadTime(&TIM_TimeBaseStructure, &TIM_BDTRInitStructure);
+
+         /* 定时器通道1输出PWM */
+         HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_1);
+         /* 定时器通道1互补输出PWM */
+         HAL_TIMEx_PWMN_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_1);
      }
 
 首先定义三个定时器初始化结构体，定时器模式配置函数主要就是对这三个结构体的成员进行初始化，
@@ -1234,32 +1232,30 @@ bsp_advance_tim.c和bsp_advance_tim.h文件用来存定时器驱动程序及相�
    :caption: 宏定义
    :linenos:
 
-    /* 通用定时器 */
-    #define GENERAL_TIM TIM2
-    #define GENERAL_TIM_CLK_ENABLE() \__TIM2_CLK_ENABLE()
+      /* 通用定时器 */
+      #define GENERAL_TIM                       TIM3
+      #define GENERAL_TIM_CLK_ENABLE()          __HAL_RCC_TIM3_CLK_ENABLE()
 
-    /* 通用定时器PWM输出 */
-    /* PWM输出引脚 */
-    #define GENERAL_OCPWM_PIN GPIO_PIN_5
-    #define GENERAL_OCPWM_GPIO_PORT GPIOA
-    #define GENERAL_OCPWM_GPIO_CLK_ENABLE() \__GPIOA_CLK_ENABLE()
-    #define GENERAL_OCPWM_AF GPIO_AF1_TIM2
+      /* 通用定时器PWM输出 */
+      /* PWM输出引脚 */
+      #define GENERAL_OCPWM_PIN                 GPIO_PIN_7              
+      #define GENERAL_OCPWM_GPIO_PORT           GPIOA                
+      #define GENERAL_OCPWM_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOA_CLK_ENABLE()
 
-    /* 高级控制定时器 */
-    #define ADVANCE_TIM TIM8
-    #define ADVANCE_TIM_CLK_ENABLE() \__TIM8_CLK_ENABLE()
+      /* 高级控制定时器 */
+      #define ADVANCE_TIM                       TIM8
+      #define ADVANCE_TIM_CLK_ENABLE()          __HAL_RCC_TIM8_CLK_ENABLE()
 
-    /* 捕获/比较中断 */
-    #define ADVANCE_TIM_IRQn TIM8_CC_IRQn
-    #define ADVANCE_TIM_IRQHandler TIM8_CC_IRQHandler
-    /* 高级控制定时器PWM输入捕获 */
-    /* PWM输入捕获引脚 */
-    #define ADVANCE_ICPWM_PIN GPIO_PIN_6
-    #define ADVANCE_ICPWM_GPIO_PORT GPIOC
-    #define ADVANCE_ICPWM_GPIO_CLK_ENABLE() \__GPIOC_CLK_ENABLE()
-    #define ADVANCE_ICPWM_AF GPIO_AF3_TIM8
-    #define ADVANCE_IC1PWM_CHANNEL TIM_CHANNEL_1
-    #define ADVANCE_IC2PWM_CHANNEL TIM_CHANNEL_2
+      /* 捕获/比较中断 */
+      #define ADVANCE_TIM_IRQn                  TIM8_CC_IRQn
+      #define ADVANCE_TIM_IRQHandler            TIM8_CC_IRQHandler
+      /* 高级控制定时器PWM输入捕获 */
+      /* PWM输入捕获引脚 */
+      #define ADVANCE_ICPWM_PIN                 GPIO_PIN_6              
+      #define ADVANCE_ICPWM_GPIO_PORT           GPIOC                    
+      #define ADVANCE_ICPWM_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOC_CLK_ENABLE()
+      #define ADVANCE_IC1PWM_CHANNEL            TIM_CHANNEL_1
+      #define ADVANCE_IC2PWM_CHANNEL            TIM_CHANNEL_2
 
 使用宏定义非常方便程序升级、移植。如果使用不同的定时器IO，修改这些宏即可。
 
@@ -1269,29 +1265,35 @@ bsp_advance_tim.c和bsp_advance_tim.h文件用来存定时器驱动程序及相�
    :caption: 定时器复用功能引脚初始化
    :linenos:
 
-    static void TIMx_GPIO_Config(void)
-    {
-        /*定义一个GPIO_InitTypeDef类型的结构体*/
-        GPIO_InitTypeDef GPIO_InitStructure;
+      static void TIMx_PWMGPIO_Cong(void) 
+      {
+      GPIO_InitTypeDef GPIO_InitStruct;
+      
+      /* 定时器通道功能引脚端口时钟使能 */
+      GENERAL_OCPWM_GPIO_CLK_ENABLE();
+      
+      /* 定时器通道1功能引脚IO初始化 */
+         /*设置输出类型*/
+      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+         /*设置引脚速率 */ 
+      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+         /*选择要控制的GPIO引脚*/	
+         GPIO_InitStruct.Pin = GENERAL_OCPWM_PIN;
+      HAL_GPIO_Init(GENERAL_OCPWM_GPIO_PORT, &GPIO_InitStruct);
+      }
 
-        /*开启定时器相关的GPIO外设时钟*/
-        GENERAL_OCPWM_GPIO_CLK_ENABLE();
-        ADVANCE_ICPWM_GPIO_CLK_ENABLE();
-
-        /* 定时器功能引脚初始化 */
-        /* 通用定时器PWM输出引脚*/
-        GPIO_InitStructure.Pin = GENERAL_OCPWM_PIN;
-        GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-        GPIO_InitStructure.Pull = GPIO_NOPULL;
-        GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
-        GPIO_InitStructure.Alternate = GENERAL_OCPWM_AF;
-        HAL_GPIO_Init(GENERAL_OCPWM_GPIO_PORT, &GPIO_InitStructure);
-
-        /* 高级定时器输入捕获引脚 */
-        GPIO_InitStructure.Pin = ADVANCE_ICPWM_PIN;
-        GPIO_InitStructure.Alternate = ADVANCE_ICPWM_AF;
-        HAL_GPIO_Init(ADVANCE_ICPWM_GPIO_PORT, &GPIO_InitStructure);
-    }
+      static void TIMx_GPIO_Config(void) 
+      {
+      /*定义一个GPIO_InitTypeDef类型的结构体*/
+      GPIO_InitTypeDef GPIO_InitStructure;
+      /*开启定时器相关的GPIO外设时钟*/
+      ADVANCE_ICPWM_GPIO_CLK_ENABLE(); 
+      /* 高级定时器输入捕获引脚 */
+      GPIO_InitStructure.Pin = ADVANCE_ICPWM_PIN;
+         GPIO_InitStructure.Mode = GPIO_MODE_INPUT;    
+      GPIO_InitStructure.Pull = GPIO_NOPULL;
+      HAL_GPIO_Init(ADVANCE_ICPWM_GPIO_PORT, &GPIO_InitStructure);	
+      }	
 
 定时器通道引脚使用之前必须设定相关参数，这选择复用功能，并指定到对应的定时器。使用GPIO之前都必须开启相应端口时钟。
 
@@ -1320,39 +1322,45 @@ bsp_advance_tim.c和bsp_advance_tim.h文件用来存定时器驱动程序及相�
 
     static void TIM_PWMOUTPUT_Config(void)
     {
-        TIM_OC_InitTypeDef TIM_OCInitStructure;
-        // 开启TIMx_CLK,x[2,3,4,5,12,13,14]
-        GENERAL_TIM_CLK_ENABLE();
-        /* 定义定时器的句柄即确定定时器寄存器的基地址*/
-        TIM_PWMOUTPUT_Handle.Instance = GENERAL_TIM;
-        /* 累计 TIM_Period个后产生一个更新或者中断*/
-        //当定时器从0计数到9999，即为10000次，为一个定时周期
-        TIM_PWMOUTPUT_Handle.Init.Period = 10000-1;
-        // 高级控制定时器时钟源TIMxCLK = HCLK=72MHz
-        // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=100KHz
-        TIM_PWMOUTPUT_Handle.Init.Prescaler = 84-1;
-        // 采样时钟分频
-        TIM_PWMOUTPUT_Handle.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
-        // 计数方式
-        TIM_PWMOUTPUT_Handle.Init.CounterMode=TIM_COUNTERMODE_UP;
-        // 重复计数器
-        TIM_PWMOUTPUT_Handle.Init.RepetitionCounter=0;
-        // 初始化定时器TIMx, x[1,8]
-        HAL_TIM_PWM_Init(&TIM_PWMOUTPUT_Handle);
-
-        /*PWM模式配置*/
-        //配置为PWM模式1
-        TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;
-        TIM_OCInitStructure.Pulse = 5000;
-        TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-        TIM_OCInitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-        TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-        TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-        //初始化通道1输出PWM
-        HAL_TIM_PWM_ConfigChannel(&TIM_PWMOUTPUT_Handle,
-        &TIM_OCInitStructure,TIM_CHANNEL_1);
-        /* 定时器通道1输出PWM */
-        HAL_TIM_PWM_Start(&TIM_PWMOUTPUT_Handle,TIM_CHANNEL_1);
+      TIM_OC_InitTypeDef  TIM_OCInitStructure;  
+         
+      /*使能定时器*/
+      GENERAL_TIM_CLK_ENABLE();
+         
+      TIM_TimeBaseStructure.Instance = GENERAL_TIM;
+      /* 累计 TIM_Period个后产生一个更新或者中断*/		
+      //当定时器从0计数到5000，即为5000次，为一个定时周期
+         TIM_TimeBaseStructure.Init.Period = 5000-1;
+         //定时器时钟源TIMxCLK = 2 * PCLK1  
+         //				PCLK1 = HCLK / 2 
+         //				=> TIMxCLK=HCLK/2=SystemCoreClock/2*2=72MHz
+         // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=10KHz
+      TIM_TimeBaseStructure.Init.Prescaler = 720-1;	
+         /*计数方式*/
+      TIM_TimeBaseStructure.Init.CounterMode = TIM_COUNTERMODE_UP;
+         /*采样时钟分频*/
+      TIM_TimeBaseStructure.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
+         /*初始化定时器*/
+      HAL_TIM_PWM_Init(&TIM_TimeBaseStructure);
+      
+         /*PWM模式配置*/
+      TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;//配置为PWM模式1
+      TIM_OCInitStructure.Pulse = 2500;//默认占空比为50%
+      TIM_OCInitStructure.OCFastMode = TIM_OCFAST_DISABLE;
+         /*当定时器计数值小于CCR1_Val时为高电平*/
+      TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;	
+         
+         /*配置PWM通道*/
+      HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure, &TIM_OCInitStructure, TIM_CHANNEL_1);
+         /*开始输出PWM*/
+         HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_1);
+         
+         /*配置脉宽*/
+      TIM_OCInitStructure.Pulse = 2500;//默认占空比为50%
+         /*配置PWM通道*/
+      HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure, &TIM_OCInitStructure, TIM_CHANNEL_2);
+         /*开始输出PWM*/
+         HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,TIM_CHANNEL_2);
 
     }
 
@@ -1368,47 +1376,48 @@ bsp_advance_tim.c和bsp_advance_tim.h文件用来存定时器驱动程序及相�
 
     static void TIM_PWMINPUT_Config(void)
     {
-        TIM_IC_InitTypeDef    TIM_ICInitStructure;
-        TIM_SlaveConfigTypeDef  TIM_SlaveConfigStructure;
-        // 开启TIMx_CLK,x[1,8]
-        ADVANCE_TIM_CLK_ENABLE();
-        /* 定义定时器的句柄即确定定时器寄存器的基地址*/
-        TIM_PWMINPUT_Handle.Instance = ADVANCE_TIM;
-        TIM_PWMINPUT_Handle.Init.Period = 0xFFFF;
-        // 高级控制定时器时钟源TIMxCLK = HCLK=168MHz
-        // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=1MHz
-        TIM_PWMINPUT_Handle.Init.Prescaler = 168-1;
-        // 采样时钟分频
-        TIM_PWMINPUT_Handle.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
-        // 计数方式
-        TIM_PWMINPUT_Handle.Init.CounterMode=TIM_COUNTERMODE_UP;
-        // 初始化定时器TIMx, x[1,8]
-        HAL_TIM_IC_Init(&TIM_PWMINPUT_Handle);
+         TIM_IC_InitTypeDef    TIM_ICInitStructure;
+         TIM_SlaveConfigTypeDef  TIM_SlaveConfigStructure;
+         //  TIM_MasterConfigTypeDef TIM_MasterConfigStructure;
+         
+         // 开启TIMx_CLK,x[1,8] 
+         ADVANCE_TIM_CLK_ENABLE(); 
+         /* 定义定时器的句柄即确定定时器寄存器的基地址*/
+         TIM_PWMINPUT_Handle.Instance = ADVANCE_TIM;
+         TIM_PWMINPUT_Handle.Init.Period = 0xFFFF;   
+         // 高级控制定时器时钟源TIMxCLK = HCLK=72MHz 
+         // 设定定时器频率为=TIMxCLK/(TIM_Prescaler+1)=1MHz
+         TIM_PWMINPUT_Handle.Init.Prescaler = 72-1; 
+         // 采样时钟分频
+         TIM_PWMINPUT_Handle.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
+         // 计数方式
+         TIM_PWMINPUT_Handle.Init.CounterMode=TIM_COUNTERMODE_UP;  
+         // 初始化定时器TIMx, x[1,8]
+         HAL_TIM_IC_Init(&TIM_PWMINPUT_Handle);
+         
+         /* IC1捕获：上升沿触发 TI1FP1 */
+         TIM_ICInitStructure.ICPolarity = TIM_ICPOLARITY_RISING;
+         TIM_ICInitStructure.ICSelection = TIM_ICSELECTION_DIRECTTI;
+         TIM_ICInitStructure.ICPrescaler = TIM_ICPSC_DIV1;
+         TIM_ICInitStructure.ICFilter = 0x0;
+         HAL_TIM_IC_ConfigChannel(&TIM_PWMINPUT_Handle,&TIM_ICInitStructure,ADVANCE_IC1PWM_CHANNEL);
 
-        /* IC1捕获：上升沿触发 TI1FP1 */
-        TIM_ICInitStructure.ICPolarity = TIM_ICPOLARITY_RISING;
-        TIM_ICInitStructure.ICSelection = TIM_ICSELECTION_DIRECTTI;
-        TIM_ICInitStructure.ICPrescaler = TIM_ICPSC_DIV1;
-        TIM_ICInitStructure.ICFilter = 0x0;
-        HAL_TIM_IC_ConfigChannel(&TIM_PWMINPUT_Handle,
-                        &TIM_ICInitStructure,ADVANCE_IC1PWM_CHANNEL);
-        /* IC2捕获：下降沿触发 TI1FP2 */
-        TIM_ICInitStructure.ICPolarity = TIM_ICPOLARITY_FALLING;
-        TIM_ICInitStructure.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-        TIM_ICInitStructure.ICPrescaler = TIM_ICPSC_DIV1;
-        TIM_ICInitStructure.ICFilter = 0x0;
-
-        HAL_TIM_IC_ConfigChannel(&TIM_PWMINPUT_Handle,
-                        &TIM_ICInitStructure,ADVANCE_IC2PWM_CHANNEL);
-        /* 选择从模式: 复位模式 */
-        TIM_SlaveConfigStructure.SlaveMode = TIM_SLAVEMODE_RESET;
-        /* 选择定时器输入触发: TI1FP1 */
-        TIM_SlaveConfigStructure.InputTrigger = TIM_TS_TI1FP1;
-        HAL_TIM_SlaveConfigSynchronization(&TIM_PWMINPUT_Handle，
-                                    &TIM_SlaveConfigStructure);
-        /* 使能捕获/比较2中断请求 */
-        HAL_TIM_IC_Start_IT(&TIM_PWMINPUT_Handle,TIM_CHANNEL_1);
-        HAL_TIM_IC_Start_IT(&TIM_PWMINPUT_Handle,TIM_CHANNEL_2);
+         /* IC2捕获：下降沿触发 TI1FP2 */  
+         TIM_ICInitStructure.ICPolarity = TIM_ICPOLARITY_FALLING;
+         TIM_ICInitStructure.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+         TIM_ICInitStructure.ICPrescaler = TIM_ICPSC_DIV1;
+         TIM_ICInitStructure.ICFilter = 0x0;
+         HAL_TIM_IC_ConfigChannel(&TIM_PWMINPUT_Handle,&TIM_ICInitStructure,ADVANCE_IC2PWM_CHANNEL);
+         
+         /* 选择从模式: 复位模式 */
+         TIM_SlaveConfigStructure.SlaveMode = TIM_SLAVEMODE_RESET;
+         /* 选择定时器输入触发: TI1FP1 */
+         TIM_SlaveConfigStructure.InputTrigger = TIM_TS_TI1FP1;
+         HAL_TIM_SlaveConfigSynchro(&TIM_PWMINPUT_Handle,&TIM_SlaveConfigStructure);
+         
+         /* 使能捕获/比较2中断请求 */
+         HAL_TIM_IC_Start_IT(&TIM_PWMINPUT_Handle,TIM_CHANNEL_1);
+         HAL_TIM_IC_Start_IT(&TIM_PWMINPUT_Handle,TIM_CHANNEL_2);
     }
 
 
@@ -1441,28 +1450,25 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
 
     void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     {
-        if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
-        {
+         if (htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
+         {
             /* 获取输入捕获值 */
             IC1Value = HAL_TIM_ReadCapturedValue(&TIM_PWMINPUT_Handle,ADVANCE_IC1PWM_CHANNEL);
-            IC2Value = HAL_TIM_ReadCapturedValue(&TIM_PWMINPUT_Handle,ADVANCE_IC2PWM_CHANNEL);
+            IC2Value = HAL_TIM_ReadCapturedValue(&TIM_PWMINPUT_Handle,ADVANCE_IC2PWM_CHANNEL);  
             if (IC1Value != 0)
             {
-                /* 占空比计算 */
-                DutyCycle = (float)((IC2Value+1) * 100) / (IC1Value+1);
-
-                /* 频率计算 */
-                Frequency = 168000000/168/(float)(IC1Value+1);
-
+               /* 占空比计算 */
+               DutyCycle = (float)((IC2Value+1) * 100) / (IC1Value+1);
+               /* 频率计算 */
+               Frequency = 72000000/72/(float)(IC1Value+1);
             }
             else
             {
-                DutyCycle = 0;
-                Frequency = 0;
+               DutyCycle = 0;
+               Frequency = 0;
             }
-
-        }
-    }
+         }
+      }
 
 中断服务函数的回调函数中，我们获取CCR1和CCR2寄存器中的值，当CCR1的值不为0时，说明有效捕获到了一个周期，然后计算出频率和占空比。
 
@@ -1552,48 +1558,46 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
    :caption: bsp_advance_tim.h
    :linenos:
 
-    /* 高级定时器配置 */
-    #define ADVANCE_TIM                     TIM8
-    #define ADVANCE_TIM_CLK_ENABLE()        __HAL_RCC_TIM8_CLK_ENABLE()
-    #define ADVANCE_TIM_IRQn                TIM8_CC_IRQn
-    #define ADVANCE_TIM_IRQHandler          TIM8_CC_IRQHandler
+      /* 高级定时器配置 */
+      #define ADVANCE_TIM           		      TIM8
+      #define ADVANCE_TIM_CLK_ENABLE()  	    __HAL_RCC_TIM8_CLK_ENABLE()
+      #define ADVANCE_TIM_IRQn		            TIM8_CC_IRQn
+      #define ADVANCE_TIM_IRQHandler          TIM8_CC_IRQHandler
 
-    /* TIM8通道1输出引脚 */
-    #define CHANNEL1_OC_PIN                 GPIO_PIN_5              
-    #define CHANNEL1_OC_GPIO_PORT           GPIOI                     
-    #define CHANNEL1_OC_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOI_CLK_ENABLE()
-    #define CHANNEL1_OC_AF                  GPIO_AF3_TIM8
-    #define ADVANCE_TIM_CHANNEL_1           TIM_CHANNEL_1
+      /* TIM8通道1输出引脚 */
+      #define CHANNEL1_OC_PIN           		  GPIO_PIN_6              
+      #define CHANNEL1_OC_GPIO_PORT     		  GPIOC                     
+      #define CHANNEL1_OC_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOC_CLK_ENABLE()
+      #define ADVANCE_TIM_CHANNEL_1           TIM_CHANNEL_1
 
-    /* TIM8通道2输出引脚 */
-    #define CHANNEL2_OC_PIN                 GPIO_PIN_6              
-    #define CHANNEL2_OC_GPIO_PORT           GPIOI                     
-    #define CHANNEL2_OC_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOI_CLK_ENABLE()
-    #define CHANNEL2_OC_AF                  GPIO_AF3_TIM8
-    #define ADVANCE_TIM_CHANNEL_2           TIM_CHANNEL_2
+      /* TIM8通道2输出引脚 */
+      #define CHANNEL2_OC_PIN           		  GPIO_PIN_7              
+      #define CHANNEL2_OC_GPIO_PORT     		  GPIOC                     
+      #define CHANNEL2_OC_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOC_CLK_ENABLE()
+      #define ADVANCE_TIM_CHANNEL_2           TIM_CHANNEL_2
 
-    /* TIM8通道3输出引脚 */
-    #define CHANNEL3_OC_PIN                 GPIO_PIN_7              
-    #define CHANNEL3_OC_GPIO_PORT           GPIOI                     
-    #define CHANNEL3_OC_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOI_CLK_ENABLE()
-    #define CHANNEL3_OC_AF                  GPIO_AF3_TIM8
-    #define ADVANCE_TIM_CHANNEL_3           TIM_CHANNEL_3
+      /* TIM8通道3输出引脚 */
+      #define CHANNEL3_OC_PIN           		  GPIO_PIN_8              
+      #define CHANNEL3_OC_GPIO_PORT     		  GPIOC                     
+      #define CHANNEL3_OC_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOC_CLK_ENABLE()
+      #define ADVANCE_TIM_CHANNEL_3           TIM_CHANNEL_3
 
-    /* TIM8通道4输出引脚 */
-    #define CHANNEL4_OC_PIN                 GPIO_PIN_9              
-    #define CHANNEL4_OC_GPIO_PORT           GPIOC                     
-    #define CHANNEL4_OC_GPIO_CLK_ENABLE()   __HAL_RCC_GPIOC_CLK_ENABLE()
-    #define CHANNEL4_OC_AF                  GPIO_AF3_TIM8
-    #define ADVANCE_TIM_CHANNEL_4           TIM_CHANNEL_4
+      /* TIM8通道4输出引脚 */
+      #define CHANNEL4_OC_PIN           		  GPIO_PIN_9              
+      #define CHANNEL4_OC_GPIO_PORT     		  GPIOC                     
+      #define CHANNEL4_OC_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOC_CLK_ENABLE()
+      #define ADVANCE_TIM_CHANNEL_4           TIM_CHANNEL_4
 
-    /*频率相关参数*/
-    //定时器实际时钟频率为：72MHz/(TIM_PRESCALER-1)
-    //其中 高级定时器的 频率为72MHz,其他定时器为84MHz
-    //168/(TIM_PRESCALER-1)=1Mhz
-    //具体需要的频率可以自己计算
-    #define TIM_PRESCALER                72
-    // 定义定时器周期，输出比较模式周期设置为0xFFFF
-    #define TIM_PERIOD                   0xFFFF
+      /*频率相关参数*/
+      //定时器实际时钟频率为：72MHz/(TIM_PRESCALER-1)
+      //168/(TIM_PRESCALER-1)=1Mhz
+      //具体需要的频率可以自己计算
+      #define TIM_PRESCALER                72
+      // 定义定时器周期，输出比较模式周期设置为0xFFFF
+      #define TIM_PERIOD                   0xFFFF
+
+      extern TIM_HandleTypeDef TIM_AdvanceHandle;
+
 
 使用宏定义非常方便程序升级、移植。如果使用不同的定时器IO，修改这些宏即可。这里的宏定义非常好理解，都是TIM8的外设配置和4个通道的IO复用配置。
 
@@ -1610,34 +1614,30 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
       */
     static void TIMx_GPIO_Config(void) 
     {
-      /*定义一个GPIO_InitTypeDef类型的结构体*/
-      GPIO_InitTypeDef GPIO_InitStructure;
+         /*定义一个GPIO_InitTypeDef类型的结构体*/
+         GPIO_InitTypeDef GPIO_InitStructure;
 
-      /*开启定时器相关的GPIO外设时钟*/
-      CHANNEL1_OC_GPIO_CLK_ENABLE();
-      CHANNEL2_OC_GPIO_CLK_ENABLE();
-      CHANNEL3_OC_GPIO_CLK_ENABLE();
-      CHANNEL4_OC_GPIO_CLK_ENABLE();
+         /*开启定时器相关的GPIO外设时钟*/
+         CHANNEL1_OC_GPIO_CLK_ENABLE();
+         CHANNEL2_OC_GPIO_CLK_ENABLE();
+         CHANNEL3_OC_GPIO_CLK_ENABLE();
+         CHANNEL4_OC_GPIO_CLK_ENABLE();
 
-      /* 定时器功能引脚初始化 */                                 
-      GPIO_InitStructure.Pin = CHANNEL1_OC_PIN; 
-      GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;    
-      GPIO_InitStructure.Pull = GPIO_NOPULL;
-      GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;   
-      GPIO_InitStructure.Alternate = CHANNEL1_OC_AF;
-      HAL_GPIO_Init(CHANNEL1_OC_GPIO_PORT, &GPIO_InitStructure);  
+         /* 定时器功能引脚初始化 */															   
+         GPIO_InitStructure.Pin = CHANNEL1_OC_PIN;	
+         GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;    
+         GPIO_InitStructure.Pull = GPIO_NOPULL;
+         GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH; 	
+         HAL_GPIO_Init(CHANNEL1_OC_GPIO_PORT, &GPIO_InitStructure);	
 
-      GPIO_InitStructure.Pin = CHANNEL2_OC_PIN; 
-      GPIO_InitStructure.Alternate = CHANNEL2_OC_AF;  
-      HAL_GPIO_Init(CHANNEL2_OC_GPIO_PORT, &GPIO_InitStructure);
+         GPIO_InitStructure.Pin = CHANNEL2_OC_PIN;	
+         HAL_GPIO_Init(CHANNEL2_OC_GPIO_PORT, &GPIO_InitStructure);
       
-      GPIO_InitStructure.Pin = CHANNEL3_OC_PIN; 
-      GPIO_InitStructure.Alternate = CHANNEL3_OC_AF;  
-      HAL_GPIO_Init(CHANNEL3_OC_GPIO_PORT, &GPIO_InitStructure);
+         GPIO_InitStructure.Pin = CHANNEL3_OC_PIN;	
+         HAL_GPIO_Init(CHANNEL3_OC_GPIO_PORT, &GPIO_InitStructure);
       
-      GPIO_InitStructure.Pin = CHANNEL4_OC_PIN; 
-      GPIO_InitStructure.Alternate = CHANNEL4_OC_AF;  
-      HAL_GPIO_Init(CHANNEL4_OC_GPIO_PORT, &GPIO_InitStructure);
+         GPIO_InitStructure.Pin = CHANNEL4_OC_PIN;	
+         HAL_GPIO_Init(CHANNEL4_OC_GPIO_PORT, &GPIO_InitStructure);
     }
 
 定时器通道引脚使用之前必须设定相关参数，这里选择复用功能，并指定到对应的定时器。使用GPIO之前都必须开启相应端口时钟。
@@ -1677,46 +1677,46 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
     
     static void TIM_Mode_Config(void)
     {
-      TIM_OC_InitTypeDef  TIM_OCInitStructure;
+         TIM_OC_InitTypeDef  TIM_OCInitStructure;
       
-      /*使能定时器*/
-      ADVANCE_TIM_CLK_ENABLE();
+         /*使能定时器*/
+         ADVANCE_TIM_CLK_ENABLE();
 
-      TIM_AdvanceHandle.Instance = ADVANCE_TIM;    
-      /* 累计 TIM_Period个后产生一个更新或者中断 */   
-      //当定时器从0计数到TIM_PERIOD，即为TIM_PERIOD次，为一个定时周期
-      TIM_AdvanceHandle.Init.Period = TIM_PERIOD; 
-      // 高级控制定时器时钟源TIMxCLK = HCLK=168MHz 
-      // 设定定时器频率为=TIMxCLK/(TIM_PRESCALER-1)
-      TIM_AdvanceHandle.Init.Prescaler = TIM_PRESCALER-1;
-      /* 计数方式 */
-      TIM_AdvanceHandle.Init.CounterMode = TIM_COUNTERMODE_UP;            
-      /* 采样时钟分频 */  
-      TIM_AdvanceHandle.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;   
-      TIM_AdvanceHandle.Init.RepetitionCounter = 0 ;      
-      /* 初始化定时器 */
-      HAL_TIM_OC_Init(&TIM_AdvanceHandle);
+         TIM_AdvanceHandle.Instance = ADVANCE_TIM;    
+         /* 累计 TIM_Period个后产生一个更新或者中断 */		
+         //当定时器从0计数到TIM_PERIOD，即为TIM_PERIOD次，为一个定时周期
+         TIM_AdvanceHandle.Init.Period = TIM_PERIOD; 
+         // 高级控制定时器时钟源TIMxCLK = HCLK=168MHz 
+         // 设定定时器频率为=TIMxCLK/(TIM_PRESCALER-1)
+         TIM_AdvanceHandle.Init.Prescaler = TIM_PRESCALER-1;
+         /* 计数方式 */
+         TIM_AdvanceHandle.Init.CounterMode = TIM_COUNTERMODE_UP;            
+         /* 采样时钟分频 */	
+         TIM_AdvanceHandle.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;   
+         TIM_AdvanceHandle.Init.RepetitionCounter = 0 ;  		
+         /* 初始化定时器 */
+         HAL_TIM_OC_Init(&TIM_AdvanceHandle);
 
-      /* PWM模式配置--这里配置为输出比较模式 */
-      TIM_OCInitStructure.OCMode = TIM_OCMODE_TOGGLE; 
-      /* 比较输出的计数值 */
-      TIM_OCInitStructure.Pulse = OC_Pulse_num_Channel1;
-      /* 当定时器计数值小于CCR1_Val时为高电平 */
-      TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-      /* 设置互补通道输出的极性 */
-      TIM_OCInitStructure.OCNPolarity = TIM_OCNPOLARITY_LOW; 
-      /* 快速模式设置 */
-      TIM_OCInitStructure.OCFastMode = TIM_OCFAST_DISABLE;   
-      /* 空闲电平 */
-      TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_RESET;  
-      /* 互补通道设置 */
-      TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET; 
-      HAL_TIM_OC_ConfigChannel(&TIM_AdvanceHandle, &TIM_OCInitStructure, ADVANCE_TIM_CHANNEL_1);
+         /* PWM模式配置--这里配置为输出比较模式 */
+         TIM_OCInitStructure.OCMode = TIM_OCMODE_TOGGLE; 
+         /* 比较输出的计数值 */
+         TIM_OCInitStructure.Pulse = OC_Pulse_num_Channel1;
+         /* 当定时器计数值小于CCR1_Val时为高电平 */
+         TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+         /* 设置互补通道输出的极性 */
+         TIM_OCInitStructure.OCNPolarity = TIM_OCNPOLARITY_LOW; 
+         /* 快速模式设置 */
+         TIM_OCInitStructure.OCFastMode = TIM_OCFAST_DISABLE;   
+         /* 空闲电平 */
+         TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_RESET;  
+         /* 互补通道设置 */
+         TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET; 
+         HAL_TIM_OC_ConfigChannel(&TIM_AdvanceHandle, &TIM_OCInitStructure, ADVANCE_TIM_CHANNEL_1);
       
       /* 通道2配置 */
       TIM_OCInitStructure.Pulse = OC_Pulse_num_Channel2;
       HAL_TIM_OC_ConfigChannel(&TIM_AdvanceHandle, &TIM_OCInitStructure, ADVANCE_TIM_CHANNEL_2);
-        
+         
       /* 通道3配置 */
       TIM_OCInitStructure.Pulse = OC_Pulse_num_Channel3;
       HAL_TIM_OC_ConfigChannel(&TIM_AdvanceHandle, &TIM_OCInitStructure, ADVANCE_TIM_CHANNEL_3);
@@ -1725,23 +1725,23 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
       TIM_OCInitStructure.Pulse = OC_Pulse_num_Channel4;
       HAL_TIM_OC_ConfigChannel(&TIM_AdvanceHandle, &TIM_OCInitStructure, ADVANCE_TIM_CHANNEL_4);
 
+         /* 启动比较输出并使能中断 */
+         HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_1);
       /* 启动比较输出并使能中断 */
-      HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_1);
+         HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_2);
       /* 启动比较输出并使能中断 */
-      HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_2);
+         HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_3);
       /* 启动比较输出并使能中断 */
-      HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_3);
-      /* 启动比较输出并使能中断 */
-      HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_4);
+         HAL_TIM_OC_Start_IT(&TIM_AdvanceHandle, ADVANCE_TIM_CHANNEL_4);
       
-      /* 使能比较通道1 */
-      TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_1, TIM_CCx_ENABLE);
+         /* 使能比较通道1 */
+         TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_1, TIM_CCx_ENABLE);
       /* 使能比较通道2 */
-      TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_2, TIM_CCx_ENABLE);
+         TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_2, TIM_CCx_ENABLE);
       /* 使能比较通道3 */
-      TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_3, TIM_CCx_ENABLE);
+         TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_3, TIM_CCx_ENABLE);
       /* 使能比较通道4 */
-      TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_4, TIM_CCx_ENABLE);
+         TIM_CCxChannelCmd(ADVANCE_TIM, ADVANCE_TIM_CHANNEL_4, TIM_CCx_ENABLE);
     }
 
 下载验证
@@ -1750,4 +1750,4 @@ IC2作为间接输入模式，我们需要配置他的从模式，即从模式�
 .. image:: ../media/多通道输出比较实验.png
    :align: center
 
-使用示波器监控PI5、PI6的波形
+使用示波器监控PC6、PC7的波形

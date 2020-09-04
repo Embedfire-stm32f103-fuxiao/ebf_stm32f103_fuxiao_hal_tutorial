@@ -146,15 +146,15 @@ MOS管搭建驱动板与主控板连接见下表所示。
     * - MOS管搭建驱动板
       - 主控板
     * - PWM1
-      - PA9
+      - PE9
     * - PWM2
-      - PA8
+      - PE11
     * - SD
-      - PG12
+      - PD15
     * - A
-      - PC6
+      - PC0
     * - B
-      - PC7
+      - PC1
     * - 电源输入：5V
       - 5V
     * - 电源输入：GND
@@ -175,7 +175,7 @@ MOS管搭建驱动板与主控板连接见下表所示。
    :caption: 代码目录
    :linenos:
 
-   basis_part\F407\直流有刷减速电机-电流电压读取-MOS管搭建板
+   basis_part\F103\直流有刷减速电机-电流电压读取-MOS管搭建板
 
 
 编程要点
@@ -245,6 +245,7 @@ ADC_GPIO_Config()函数
       HAL_GPIO_Init(VBUS_GPIO_PORT, &GPIO_InitStructure);	
    }
 
+
 ADC_GPIO_Config()中的部分配置使用了宏定义，具体定义内容到工程中查看。
 
 adc_dma_init()函数
@@ -258,7 +259,7 @@ adc_dma_init()函数
    void adc_dma_init(void)
    {
       // ------------------DMA Init 结构体参数 初始化--------------------------
-      // ADC1使用DMA2，数据流0，通道0，这个是手册固定死的
+      // ADC1使用DMA1，通道1，这个是手册固定死的
       // 开启DMA时钟
       CURR_ADC_DMA_CLK_ENABLE();
       // 数据传输通道
@@ -277,15 +278,7 @@ adc_dma_init()函数
       DMA_Init_Handle.Init.Mode = DMA_CIRCULAR;
       // DMA 传输通道优先级为高，当使用一个DMA通道时，优先级设置不影响
       DMA_Init_Handle.Init.Priority = DMA_PRIORITY_HIGH;
-      // 禁止DMA FIFO	，使用直连模式
-      DMA_Init_Handle.Init.FIFOMode = DMA_FIFOMODE_DISABLE;  
-      // FIFO 大小，FIFO模式禁止时，这个不用配置
-      DMA_Init_Handle.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_HALFFULL;
-      DMA_Init_Handle.Init.MemBurst = DMA_MBURST_SINGLE;
-      DMA_Init_Handle.Init.PeriphBurst = DMA_PBURST_SINGLE;  
-      // 选择 DMA 通道，通道存在于流中
-      DMA_Init_Handle.Init.Channel = CURR_ADC_DMA_CHANNEL; 
-      //初始化DMA流，流相当于一个大的管道，管道里面有很多通道
+      //初始化DMA
       HAL_DMA_Init(&DMA_Init_Handle); 
 
       __HAL_LINKDMA(&ADC_Handle,DMA_Handle,DMA_Init_Handle);
@@ -310,13 +303,10 @@ ADC_Mode_Config()函数
    {
       // 开启ADC时钟
       CURR_ADC_CLK_ENABLE();
+
       // -------------------ADC Init 结构体 参数 初始化------------------------
       // ADC1
       ADC_Handle.Instance = CURR_ADC;
-      // 时钟为fpclk 4分频	
-      ADC_Handle.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV4;
-      // ADC 分辨率
-      ADC_Handle.Init.Resolution = ADC_RESOLUTION_12B;
       // 禁止扫描模式，多通道采集才需要	
       ADC_Handle.Init.ScanConvMode = ENABLE; 
       // 连续转换	
@@ -325,29 +315,22 @@ ADC_Mode_Config()函数
       ADC_Handle.Init.DiscontinuousConvMode = DISABLE;
       // 非连续转换个数
       ADC_Handle.Init.NbrOfDiscConversion   = 0;
-      //禁止外部边沿触发    
-      ADC_Handle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
       //使用软件触发
       ADC_Handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
       //数据左对齐
       ADC_Handle.Init.DataAlign = ADC_DATAALIGN_LEFT;
       //转换通道 2个
       ADC_Handle.Init.NbrOfConversion = 2;
-      //使能连续转换请求
-      ADC_Handle.Init.DMAContinuousRequests = ENABLE;
-      //转换完成标志
-      ADC_Handle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;    
       // 初始化ADC	                          
       HAL_ADC_Init(&ADC_Handle);
-      
+         
       //---------------------------------------------------------------------------
       ADC_ChannelConfTypeDef ADC_Config;
       
       ADC_Config.Channel      = CURR_ADC_CHANNEL;
       ADC_Config.Rank         = 1;
       // 采样时间间隔	
-      ADC_Config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-      ADC_Config.Offset       = 0;
+      ADC_Config.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
       // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
       HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config);
       
@@ -356,12 +339,13 @@ ADC_Mode_Config()函数
       ADC_Config.Channel = VBUS_ADC_CHANNEL;
       ADC_Config.Rank = 2;
       // 采样时间间隔	
-      ADC_Config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-      ADC_Config.Offset       = 0;
+      ADC_Config.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
       if (HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config) != HAL_OK)
       {
          while(1);
       }
+      
+      HAL_ADCEx_Calibration_Start(&ADC_Handle);     // 校准 ADC
       
       // 外设中断优先级配置和使能中断配置
       HAL_NVIC_SetPriority(ADC_DMA_IRQ, 1, 1);
@@ -369,6 +353,7 @@ ADC_Mode_Config()函数
 
       HAL_ADC_Start_DMA(&ADC_Handle, (uint32_t*)&adc_buff, ADC_NUM_MAX);
    }
+
 
 ADC_Mode_Config()函数对ADC进行了配置，具体看代码中各个参数的注释。将ADC配置为循环采集，因实际工程中也进行了电压采集，所以配置了两个转换通道，最后分别配置两个通道参数，就完成了ADC的配置。再配置的最后，使用HAL_ADC_Start_DMA使能DMA传输，就可以开始采集数据了，但是我们还需要对数据进行更多的处理，才能使数据稳定可靠。
 
@@ -390,20 +375,20 @@ HAL_ADC_ConvCpltCallback()函数
    */
    void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
    {
-   int32_t adc_mean = 0;
+   uint32_t adc_mean = 0;
 
    HAL_ADC_Stop_DMA(hadc);       // 停止 ADC 采样，处理完一次数据在继续采样
    
    /* 计算电流通道采样的平均值 */
    for(uint32_t count = 0; count < ADC_NUM_MAX; count+=2)
    {
-      adc_mean += (int32_t)adc_buff[count];
+      adc_mean += (uint32_t)adc_buff[count];
    }
    
    adc_mean_sum += adc_mean / (ADC_NUM_MAX / 2);    // 累加电压
    adc_mean_count++;
    
-   #if 1
+   #if 0
    
    adc_mean = 0;
    
@@ -451,27 +436,28 @@ get_curr_val()函数
    
    curr_adc_mean = adc_mean_sum / adc_mean_count;    // 保存平均值
    
-
-      adc_mean_count = 0;
-      adc_mean_sum = 0;
-      
-      if (flag < 17)
-      {
-         adc_offset = curr_adc_mean;    // 多次记录偏置电压，待系统稳定偏置电压才为有效值
-         flag += 1;
-      }
-      if(curr_adc_mean>=adc_offset)
+   adc_mean_count = 0;
+   adc_mean_sum = 0;
+   
+   if (flag < 17)
+   {
+      adc_offset = curr_adc_mean;    // 多次记录偏置电压，待系统稳定偏置电压才为有效值
+      flag += 1;
+   }
+   
+   if(curr_adc_mean>=adc_offset)
       {
          curr_adc_mean -= adc_offset;                     // 减去偏置电压
-      }else
+      }
+   else
       {
          curr_adc_mean=0;
       }
 
-      float vdc = GET_ADC_VDC_VAL(curr_adc_mean);      // 获取电压值
-      
-      return GET_ADC_CURR_VAL(vdc);
-      }
+   float vdc = GET_ADC_VDC_VAL(curr_adc_mean);      // 获取电压值
+   
+   return GET_ADC_CURR_VAL(vdc);
+   }
 
 在get_curr_val()中，我们对采集得到的原始数据累加的和(adc_mean_sum)除以累加次数(adc_mean_count)来求平均值，进行滤波操作，保证数据的稳定性。然后我们将以前的累加次数清零，为后面采集的数据做重新开始累加、滤波的准备。在实际情况中，每采集10次数据做一次滤波，得到的电流数据比较稳定，但是在程序设定时间内可能无法达到每采集10次做一次滤波操作，所以用户可以根据实际的实际需求来设定采集次数，采集间隔等。
 
@@ -506,14 +492,16 @@ get_curr_val()函数
    int main(void) 
    {
    __IO uint16_t ChannelPulse = PWM_MAX_PERIOD_COUNT*0.5;
-   uint8_t i = 0;
-   uint8_t flag = 0;
+   uint8_t flag = 0, i = 0, enable = 0;
 
    HAL_Init();
    
       /* 初始化系统时钟为168MHz */
       SystemClock_Config();
-   
+
+      /* 开启复用寄存器时钟 */
+      __HAL_RCC_SYSCFG_CLK_ENABLE();
+      
       /* 初始化按键GPIO */
       Key_GPIO_Config();
    
@@ -539,19 +527,22 @@ get_curr_val()函数
       /* 扫描KEY1 */
       if( Key_Scan(KEY1_GPIO_PORT, KEY1_PIN) == KEY_ON)
       {
+         if (enable == 0)
+         {
          /* 使能电机 */
-         set_motor_enable(); 
-      }
-      
-      /* 扫描KEY2 */
-      if( Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)
-      {
+         set_motor_enable();
+         }
+         else
+         {
          /* 禁用电机 */
          set_motor_disable();
+         }
+         
+         enable = !enable;
       }
       
       /* 扫描KEY3 */
-      if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
+      if( Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)
       {
          /* 增大占空比 */
          ChannelPulse += PWM_MAX_PERIOD_COUNT/10;
@@ -563,7 +554,7 @@ get_curr_val()函数
       }
       
       /* 扫描KEY4 */
-      if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
+      if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
       {
          if(ChannelPulse < PWM_MAX_PERIOD_COUNT/10)
          ChannelPulse = 0;
@@ -574,23 +565,18 @@ get_curr_val()函数
       }
       
       /* 扫描KEY5 */
-      if( Key_Scan(KEY5_GPIO_PORT, KEY5_PIN) == KEY_ON)
+      if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
       {
          /* 转换方向 */
          set_motor_direction( (++i % 2) ? MOTOR_FWD : MOTOR_REV);
       }
-      
+
       if (HAL_GetTick()%50 == 0 && flag == 0)    // 每50毫秒读取一次电流、电压
       {
          flag = 1;
          int32_t current = get_curr_val();
          
-      #if 0//defined(PID_ASSISTANT_EN)
-         set_computer_value(SEED_FACT_CMD, CURVES_CH1, &current, 1);
-      #else
          printf("电源电压：%.2fV，电流：%dmA\r\n", get_vbus_val(), current); 
-      #endif
-         
       }
       else if (HAL_GetTick()%50 != 0 && flag == 1)
       {
@@ -653,10 +639,30 @@ ADC_Init函数
    */
    static void ADC_Mode_Config(void)
    {
-      /*************************************************************************/
-      /********************************前面代码部分相同,省略********************************/
-      /*************************************************************************/
-      /** Configure the analog watchdog 
+      // 开启ADC时钟
+      CURR_ADC_CLK_ENABLE();
+      // -------------------ADC Init 结构体 参数 初始化------------------------
+      // ADC1
+      ADC_Handle.Instance = CURR_ADC;
+      // 禁止扫描模式，多通道采集才需要	
+      ADC_Handle.Init.ScanConvMode = ENABLE; 
+      // 连续转换	
+      ADC_Handle.Init.ContinuousConvMode = ENABLE;
+      // 非连续转换	
+      ADC_Handle.Init.DiscontinuousConvMode = DISABLE;
+      // 非连续转换个数
+      ADC_Handle.Init.NbrOfDiscConversion   = 0;
+      //使用软件触发
+      ADC_Handle.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+      //数据左对齐
+      ADC_Handle.Init.DataAlign = ADC_DATAALIGN_LEFT;
+      //转换通道 2个
+      ADC_Handle.Init.NbrOfConversion = 2;
+      // 初始化ADC	                          
+      HAL_ADC_Init(&ADC_Handle);
+      
+         
+         /** Configure the analog watchdog 
       */
       ADC_AnalogWDGConfTypeDef AnalogWDGConfig = {0};
       
@@ -669,26 +675,37 @@ ADC_Init函数
       {
          while(1);
       }
+         
+      //---------------------------------------------------------------------------
+      ADC_ChannelConfTypeDef ADC_Config;
+      
+      ADC_Config.Channel      = CURR_ADC_CHANNEL;
+      ADC_Config.Rank         = 1;
+      // 采样时间间隔	
+      ADC_Config.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+      // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
+      HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config);
       
       /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
       */
       ADC_Config.Channel = VBUS_ADC_CHANNEL;
       ADC_Config.Rank = 2;
       // 采样时间间隔	
-      ADC_Config.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-      ADC_Config.Offset       = 0;
+      ADC_Config.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
       if (HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config) != HAL_OK)
       {
          while(1);
       }
       
+      HAL_ADCEx_Calibration_Start(&ADC_Handle);     // 校准 ADC
+      
       // 外设中断优先级配置和使能中断配置
       HAL_NVIC_SetPriority(ADC_DMA_IRQ, 1, 1);
       HAL_NVIC_EnableIRQ(ADC_DMA_IRQ);
-      
+
       HAL_NVIC_SetPriority(ADC_VBUS_IRQ, 0, 1);
       HAL_NVIC_EnableIRQ(ADC_VBUS_IRQ);
-
+         
       HAL_ADC_Start_DMA(&ADC_Handle, (uint32_t*)&adc_buff, ADC_NUM_MAX);
    }
 
@@ -707,22 +724,28 @@ ADC模拟看门狗溢出回调函数
    * @param  hadc: ADC  句柄.
    * @retval 无
    */
+
    void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef* hadc)
    {
-      flag_num++;     // 电源电压超过阈值电压
+      float temp_adc;
       
-      if (vbus_adc_mean > VBUS_HEX_MIN && vbus_adc_mean < VBUS_HEX_MAX)
-         flag_num = 0;
+   flag_num++;     // 电源电压超过阈值电压
       
-      if (flag_num > ADC_NUM_MAX)      // 电源电压超过阈值电压10次
-      {
-         set_motor_disable();
-         flag_num = 0;
-         LED1_ON;
-         printf("电源电压超过限制！请检查原因，复位开发板在试！\r\n");
-         while(1);
-      }
+   temp_adc = get_vbus_val();
+      
+   if (temp_adc > VBUS_MIN && temp_adc < VBUS_MAX)
+      flag_num = 0;
+   
+   if (flag_num > ADC_NUM_MAX)      // 电源电压超过阈值电压10次
+   {
+      set_motor_disable();
+      flag_num = 0;
+      LED1_ON;
+      printf("电源电压超过限制！请检查原因，复位开发板在试！\r\n");
+      while(1);
    }
+   }
+
 
 当看门狗检测到溢出时，会触发此中断回调函数。在函数中，我们使用了flag_num来记录触发异常的次数，如果flag_num超过阈值，我们则认为电路异常了，这时采取电机停机、LED灯显示提示、串口打印等来提示用户电路异常的情况，在实际应用中，我们则根据实际需要来调整这部分代码。
 
@@ -745,17 +768,19 @@ ADC模拟看门狗溢出回调函数
    {
    __IO uint16_t ChannelPulse = PWM_MAX_PERIOD_COUNT*0.5;
    uint8_t curr_max_count = 0;
-   uint8_t flag = 0;
-   uint8_t dir = 0;
+   uint8_t flag = 0, i = 0, enable = 0;
 
    HAL_Init();
+   
+      /* 初始化系统时钟为168MHz */
+      SystemClock_Config();
 
-   /* 初始化系统时钟为168MHz */
-   SystemClock_Config();
-
-   /* 初始化按键GPIO */
-   Key_GPIO_Config();
-
+      /* 开启复用寄存器时钟 */
+      __HAL_RCC_SYSCFG_CLK_ENABLE();
+      
+      /* 初始化按键GPIO */
+      Key_GPIO_Config();
+   
    /* 初始化 LED */
    LED_GPIO_Config();
 
@@ -773,24 +798,28 @@ ADC模拟看门狗溢出回调函数
    
    printf("野火直流有刷电机-限流-过压-欠压保护实验\r\n");
       
+      
       while(1)
       {
       /* 扫描KEY1 */
       if( Key_Scan(KEY1_GPIO_PORT, KEY1_PIN) == KEY_ON)
       {
+         if (enable == 0)
+         {
          /* 使能电机 */
-         set_motor_enable(); 
+         set_motor_enable();
+         }
+         else
+         {
+         /* 禁用电机 */
+         set_motor_disable();
+         }
+         
+         enable = !enable;
       }
       
       /* 扫描KEY2 */
       if( Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)
-      {
-         /* 禁用电机 */
-         set_motor_disable();
-      }
-      
-      /* 扫描KEY3 */
-      if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
       {
          /* 增大占空比 */
          ChannelPulse += PWM_MAX_PERIOD_COUNT/10;
@@ -801,8 +830,8 @@ ADC模拟看门狗溢出回调函数
          set_motor_speed(ChannelPulse);
       }
       
-      /* 扫描KEY4 */
-      if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
+      /* 扫描KEY3 */
+      if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
       {
          if(ChannelPulse < PWM_MAX_PERIOD_COUNT/10)
          ChannelPulse = 0;
@@ -812,11 +841,11 @@ ADC模拟看门狗溢出回调函数
          set_motor_speed(ChannelPulse);
       }
       
-      /* 扫描KEY5 */
-      if( Key_Scan(KEY5_GPIO_PORT, KEY5_PIN) == KEY_ON)
+      /* 扫描KEY4 */
+      if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
       {
          /* 转换方向 */
-         set_motor_direction( (++dir % 2) ? MOTOR_FWD : MOTOR_REV);
+         set_motor_direction( (++i % 2) ? MOTOR_FWD : MOTOR_REV);
       }
       
       if (HAL_GetTick()%50 == 0 && flag == 0)    // 每50毫秒读取一次电流、电压
@@ -824,12 +853,8 @@ ADC模拟看门狗溢出回调函数
          flag = 1;
          int32_t current = get_curr_val();
 
-      #if 0//defined(PID_ASSISTANT_EN)
-         set_computer_value(SEED_FACT_CMD, CURVES_CH1, &current, 1);
-      #else
          printf("电源电压：%.2fV，电流：%dmA\r\n", get_vbus_val(), current); 
-      #endif
-         
+
          if (current > CURR_MAX)    // 判断是不是超过限定的值
          {
          if (curr_max_count++ > 5)    // 连续5次超过

@@ -254,13 +254,13 @@ L298N驱动板与主控板连接见下表所示。
     * - L298N驱动板
       - 主控板
     * - PWM1
-      - PA9
+      - PE9
     * - PWM2
-      - PA8
+      - PE11
     * - GND
       - GND
     * - ENA
-      - PG12
+      - PD15
 
 在L298N驱动板与主控板连接中，ENA可以不接PG12，使用跳冒连接到5V。
 
@@ -430,29 +430,35 @@ MOS管搭建驱动板与主控板连接见下表所示。
 
     /*宏定义*/
     #define PWM_TIM                        	TIM1
-    #define PWM_TIM_GPIO_AF                 GPIO_AF1_TIM1
-    #define PWM_TIM_CLK_ENABLE()  					__TIM1_CLK_ENABLE()
+    #define PWM_TIM_GPIO_AF_ENALBE()        __HAL_AFIO_REMAP_TIM1_ENABLE();
+    #define PWM_TIM_CLK_ENABLE()  					__HAL_RCC_TIM1_CLK_ENABLE()
 
     #define PWM_CHANNEL_1                   TIM_CHANNEL_1
     #define PWM_CHANNEL_2                   TIM_CHANNEL_2
 
-    /* 累计 TIM_Period个后产生一个更新或者中断*/
+    /* 累计 TIM_Period个后产生一个更新或者中断*/		
     /* 当定时器从0计数到PWM_PERIOD_COUNT，即为PWM_PERIOD_COUNT+1次，为一个定时周期 */
-    #define PWM_PERIOD_COUNT     (1000)
+    #define PWM_PERIOD_COUNT     (3600)
 
-    /* 通用控制定时器时钟源TIMxCLK = HCLK=168MHz */
+    /* 通用控制定时器时钟源TIMxCLK = HCLK=72MHz */
     /* 设定定时器频率为=TIMxCLK/(PWM_PRESCALER_COUNT+1) */
-    #define PWM_PRESCALER_COUNT     (9)
+    #define PWM_PRESCALER_COUNT     (2)
+
+    /* 最大比较值 */
+    #define PWM_MAX_PERIOD_COUNT              (PWM_PERIOD_COUNT - 100)
 
     /*PWM引脚*/
-    #define PWM_TIM_CH1_GPIO_PORT           GPIOA
-    #define PWM_TIM_CH1_PIN                 GPIO_PIN_8
+    #define PWM_TIM_CH1_GPIO_CLK()             __HAL_RCC_GPIOE_CLK_ENABLE();
+    #define PWM_TIM_CH1_GPIO_PORT              GPIOE
+    #define PWM_TIM_CH1_PIN                    GPIO_PIN_9
 
-    #define PWM_TIM_CH2_GPIO_PORT           GPIOA
-    #define PWM_TIM_CH2_PIN                 GPIO_PIN_9
+    #define PWM_TIM_CH2_GPIO_CLK()             __HAL_RCC_GPIOE_CLK_ENABLE();
+    #define PWM_TIM_CH2_GPIO_PORT              GPIOE
+    #define PWM_TIM_CH2_PIN                    GPIO_PIN_11
 
-    #define PWM_TIM_CH3_GPIO_PORT           GPIOA
-    #define PWM_TIM_CH3_PIN                 GPIO_PIN_10
+    #define PWM_TIM_CH3_GPIO_CLK()             __HAL_RCC_GPIOE_CLK_ENABLE();
+    #define PWM_TIM_CH3_GPIO_PORT              GPIOE
+    #define PWM_TIM_CH3_PIN                    GPIO_PIN_13
 
 使用宏定义非常方便程序升级、移植。如果使用不同的定时器IO，修改这些宏即可。
 
@@ -462,30 +468,33 @@ MOS管搭建驱动板与主控板连接见下表所示。
    :caption: 定时器复用功能引脚初始化
    :linenos:
 
-    static void TIMx_GPIO_Config(void)
-    {
-    GPIO_InitTypeDef GPIO_InitStruct;
+      static void TIMx_GPIO_Config(void) 
+      {
+      GPIO_InitTypeDef GPIO_InitStruct;
+        
+        /* 定时器通道功能引脚端口时钟使能 */
+        
+        PWM_TIM_CH1_GPIO_CLK();
+        PWM_TIM_CH2_GPIO_CLK();
+        
+        /* 定时器通道1功能引脚IO初始化 */
+        /*设置输出类型*/
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        /*设置引脚速率 */ 
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        /*设置复用*/
+        PWM_TIM_GPIO_AF_ENALBE();
+        
+        /*选择要控制的GPIO引脚*/	
+        GPIO_InitStruct.Pin = PWM_TIM_CH1_PIN;
+        /*调用库函数，使用上面配置的GPIO_InitStructure初始化GPIO*/
+        HAL_GPIO_Init(PWM_TIM_CH1_GPIO_PORT, &GPIO_InitStruct);
 
-      /* 定时器通道功能引脚端口时钟使能 */
+        GPIO_InitStruct.Pin = PWM_TIM_CH2_PIN;	
+        HAL_GPIO_Init(PWM_TIM_CH2_GPIO_PORT, &GPIO_InitStruct);
+        
+      }
 
-      __HAL_RCC_GPIOA_CLK_ENABLE();
-      __HAL_RCC_GPIOA_CLK_ENABLE();
-
-      /* 定时器通道1功能引脚IO初始化 */
-      /*设置输出类型*/
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-      /*设置引脚速率 */
-      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-      /*设置复用*/
-      GPIO_InitStruct.Alternate = PWM_TIM_GPIO_AF;
-
-      /*选择要控制的GPIO引脚*/
-      GPIO_InitStruct.Pin = PWM_TIM_CH1_PIN;
-      /*调用库函数，使用上面配置的GPIO_InitStructure初始化GPIO*/
-      HAL_GPIO_Init(PWM_TIM_CH1_GPIO_PORT, &GPIO_InitStruct);
-      GPIO_InitStruct.Pin = PWM_TIM_CH2_PIN;	
-      HAL_GPIO_Init(PWM_TIM_CH2_GPIO_PORT, &GPIO_InitStruct);
-    }
 
 定时器通道引脚使用之前必须设定相关参数，这选择复用功能，并指定到对应的定时器。
 使用GPIO之前都必须开启相应端口时钟。
@@ -497,16 +506,16 @@ MOS管搭建驱动板与主控板连接见下表所示。
     TIM_HandleTypeDef  TIM_TimeBaseStructure;
     static void TIM_PWMOUTPUT_Config(void)
     {
-      TIM_OC_InitTypeDef  TIM_OCInitStructure;
-
+      TIM_OC_InitTypeDef  TIM_OCInitStructure;  
+      
       /*使能定时器*/
       PWM_TIM_CLK_ENABLE();
-
+      
       TIM_TimeBaseStructure.Instance = PWM_TIM;
-      /* 累计 TIM_Period个后产生一个更新或者中断*/
+      /* 累计 TIM_Period个后产生一个更新或者中断*/		
       //当定时器从0计数到PWM_PERIOD_COUNT，即为PWM_PERIOD_COUNT+1次，为一个定时周期
       TIM_TimeBaseStructure.Init.Period = PWM_PERIOD_COUNT - 1;
-      // 通用控制定时器时钟源TIMxCLK = HCLK/2=84MHz
+      // 通用控制定时器时钟源TIMxCLK = HCLK/2=84MHz 
       // 设定定时器频率为=TIMxCLK/(PWM_PRESCALER_COUNT+1)
       TIM_TimeBaseStructure.Init.Prescaler = PWM_PRESCALER_COUNT - 1;	
       
@@ -516,28 +525,29 @@ MOS管搭建驱动板与主控板连接见下表所示。
       TIM_TimeBaseStructure.Init.ClockDivision=TIM_CLOCKDIVISION_DIV1;
       /*初始化定时器*/
       HAL_TIM_PWM_Init(&TIM_TimeBaseStructure);
-
-    	/*PWM模式配置*/
+      
+      /*PWM模式配置*/
       TIM_OCInitStructure.OCMode = TIM_OCMODE_PWM1;
-    	TIM_OCInitStructure.Pulse = 0;
-    	TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-    	TIM_OCInitStructure.OCNPolarity = TIM_OCPOLARITY_HIGH;
-    	TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-    	TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+      TIM_OCInitStructure.Pulse = 0;
+      TIM_OCInitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+      TIM_OCInitStructure.OCNPolarity = TIM_OCPOLARITY_HIGH;
+      TIM_OCInitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
+      TIM_OCInitStructure.OCNIdleState = TIM_OCNIDLESTATE_RESET;
       TIM_OCInitStructure.OCFastMode = TIM_OCFAST_DISABLE;
-    	
-    	/*配置PWM通道*/
+      
+      /*配置PWM通道*/
       HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure, &TIM_OCInitStructure, PWM_CHANNEL_1);
-    	/*开始输出PWM*/
-    	HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,PWM_CHANNEL_1);
-    	
-    	/*配置脉宽*/
+      /*开始输出PWM*/
+      HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,PWM_CHANNEL_1);
+      
+      /*配置脉宽*/
       TIM_OCInitStructure.Pulse = 0;    // 默认占空比为50%
-    	/*配置PWM通道*/
+      /*配置PWM通道*/
       HAL_TIM_PWM_ConfigChannel(&TIM_TimeBaseStructure, &TIM_OCInitStructure, PWM_CHANNEL_2);
-    	/*开始输出PWM*/
-    	HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,PWM_CHANNEL_2);
+      /*开始输出PWM*/
+      HAL_TIM_PWM_Start(&TIM_TimeBaseStructure,PWM_CHANNEL_2);
     }
+
 
 首先定义两个定时器初始化结构体，定时器模式配置函数主要就是对这两个结构体的成员进行初始化，
 然后通过相应的初始化函数把这些参数写入定时器的寄存器中。有关结构体的成员介绍请参考定时器详解章节。
@@ -644,74 +654,77 @@ ChannelPulse是我们定义的一个无符号16位整形的全局变量，用来
    :caption: main
    :linenos:
 	
-	  /**
-	    * @brief  主函数
-	    * @param  无
-	    * @retval 无
-	    */
-	  int main(void) 
-	  {
-	  	__IO uint16_t ChannelPulse = PWM_MAX_PERIOD_COUNT/2;
-	  	uint8_t i = 0;
-	  
-	  	/* 初始化系统时钟为168MHz */
-	  	SystemClock_Config();
-	  
-	  	/* 初始化按键GPIO */
-	  	Key_GPIO_Config();
-	  
-	  	/* 电机初始化 */
-	  	motor_init();
-	  
-	  	set_motor_disable();
-	  	set_motor_speed(ChannelPulse);
-	  	
-	  	while(1)
-	  	{
-	      /* 扫描KEY1 */
-	      if( Key_Scan(KEY1_GPIO_PORT, KEY1_PIN) == KEY_ON)
-	      {
-	        /* 使能电机 */
-	        set_motor_enable();
-	      }
-	      
-	      /* 扫描KEY2 */
-	      if( Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)
-	      {
-	        set_motor_disable();
-	      }
-	      
-	      /* 扫描KEY3 */
-	      if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
-	      {
-	        /* 增大占空比 */
-	        ChannelPulse += PWM_MAX_PERIOD_COUNT/10;
-	        
-	        if(ChannelPulse > PWM_MAX_PERIOD_COUNT)
-	          ChannelPulse = PWM_MAX_PERIOD_COUNT;
-	        
-	        set_motor_speed(ChannelPulse);
-	      }
-	      
-	      /* 扫描KEY4 */
-	      if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
-	      {
-	        if(ChannelPulse < PWM_MAX_PERIOD_COUNT/10)
-	          ChannelPulse = 0;
-	        else
-	          ChannelPulse -= PWM_MAX_PERIOD_COUNT/10;
-	        
-	        set_motor_speed(ChannelPulse);
-	      }
-	      
-	      /* 扫描KEY5 */
-	      if( Key_Scan(KEY5_GPIO_PORT, KEY5_PIN) == KEY_ON)
-	      {
-	        /* 转换方向 */
-	        set_motor_direction( (++i % 2) ? MOTOR_FWD : MOTOR_REV);
-	      }
-	  	}
-	  }
+    int main(void) 
+    {
+      __IO uint16_t ChannelPulse = PWM_MAX_PERIOD_COUNT/2;
+      uint8_t i = 0;
+      uint8_t enable = 0;
+      
+      /* 初始化系统时钟为168MHz */
+      SystemClock_Config();
+
+      /* 开启复用寄存器时钟 */
+      __HAL_RCC_SYSCFG_CLK_ENABLE();
+      
+      /* 初始化按键GPIO */
+      Key_GPIO_Config();
+
+      /* 电机初始化 */
+      motor_init();
+      
+      set_motor_disable();
+      set_motor_speed(ChannelPulse);
+      
+      while(1)
+      {
+        /* 扫描KEY1 */
+        if( Key_Scan(KEY1_GPIO_PORT, KEY1_PIN) == KEY_ON)
+        {
+          if (enable == 0)
+          {
+            /* 使能电机 */
+            set_motor_enable();
+          }
+          else
+          {
+            /* 禁用电机 */
+            set_motor_disable();
+          }
+          
+          enable = !enable;
+        }
+        
+        /* 扫描KEY2 */
+        if( Key_Scan(KEY2_GPIO_PORT, KEY2_PIN) == KEY_ON)
+        {
+          /* 增大占空比 */
+          ChannelPulse += PWM_MAX_PERIOD_COUNT/10;
+          
+          if(ChannelPulse > PWM_MAX_PERIOD_COUNT)
+            ChannelPulse = PWM_MAX_PERIOD_COUNT;
+          
+          set_motor_speed(ChannelPulse);
+        }
+        
+        /* 扫描KEY3 */
+        if( Key_Scan(KEY3_GPIO_PORT, KEY3_PIN) == KEY_ON)
+        {
+          if(ChannelPulse < PWM_MAX_PERIOD_COUNT/10)
+            ChannelPulse = 0;
+          else
+            ChannelPulse -= PWM_MAX_PERIOD_COUNT/10;
+          
+          set_motor_speed(ChannelPulse);
+        }
+        
+        /* 扫描KEY4 */
+        if( Key_Scan(KEY4_GPIO_PORT, KEY4_PIN) == KEY_ON)
+        {
+          /* 转换方向 */
+          set_motor_direction( (++i % 2) ? MOTOR_FWD : MOTOR_REV);
+        }
+      }
+    }
 
 首先初始化系统时钟，然后初始化定时器和按键，将占空比设置为50%。
 在死循环里面扫描按键，KEY1按下使能电机驱动板，KEY2按下失能电机驱动板，KEY3按键按下增加速度（占空比），KEY4按键按下减少速度（占空比），
@@ -727,8 +740,8 @@ KEY5按键按下切换电机旋转方向。
 - 使用示波器的CH1连接到PA15，CH2连接到PB3，注意示波器要与开发板共地；
 - 给开发板供电，编译下载配套源码，复位开发板。
 
-上电后我们通过示波器可以观察到两个通道都是低电平，当按下KEY1后，使能PWM输出，按KEY3可以增加CH1通道的占空比，
-，按KEY4可以减小占空比，按KEY5可以交换PWM输出，如下图所示。
+上电后我们通过示波器可以观察到两个通道都是低电平，当按下KEY1后，使能PWM输出，按KEY2可以增加CH1通道的占空比，
+，按KEY3可以减小占空比，按KEY4可以交换PWM输出，如下图所示。
 
 .. image:: ../media/dc_motor_duty_cycle1.jpg
    :align: center
