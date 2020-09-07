@@ -1,73 +1,85 @@
-.. [野火]电机应用开发实战指南 documentation master file, created by
-   sphinx-quickstart on Thu Nov 21 10:50:33 2019.
+.. [野火]STM32库开发实战指南——基于野火指南者开发板 documentation master file, created by
+   sphinx-quickstart on Wed Nov 20 09:46:40 2019.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. 这一页是目录树
-
-[野火]电机应用开发实战指南
-======================================================
+[野火]STM32 HAL库开发实战指南——基于野火拂晓开发板
+========================================================
 
 .. toctree::
    :maxdepth: 1
-   :caption: 关于本项目
+
 
    README
    about_us
-   contribute/quick-contribute
    TODO
 
 .. toctree::
    :maxdepth: 1
-   :caption: 如何学习
+   :caption: [野火]STM32 HAL库开发实战指南
    :numbered:
 
-   zero_part/foreword
-   zero_part/why-study
-   zero_part/how-study
+   doc/chapter1/chapter1
+   doc/chapter2/chapter2
+   doc/chapter3/chapter3
+   doc/chapter4/chapter4
+   doc/chapter5/chapter5
+   doc/chapter6/chapter6
+   doc/chapter7/chapter7
+   doc/chapter8/chapter8
+   doc/chapter9/chapter9
+   doc/chapter10/chapter10
+   doc/chapter11/chapter11
+   doc/chapter12/chapter12
+   doc/chapter13/chapter13
+   doc/chapter14/chapter14
+   doc/chapter15/chapter15
+   doc/chapter16/chapter16
+   doc/chapter17/chapter17
+   doc/chapter18/chapter18
+   doc/chapter19/chapter19
+   doc/chapter20/chapter20
+   doc/chapter21/chapter21
+   doc/chapter22/chapter22
+   doc/chapter23/chapter23
+   doc/chapter24/chapter24
+   doc/chapter25/chapter25
+   doc/chapter29/chapter29
+   doc/chapter30/chapter30
+   doc/chapter31/chapter31
+   doc/chapter33/chapter33
+   doc/chapter34/chapter34
+   doc/chapter37/chapter37
+   doc/chapter38/chapter38
+   doc/chapter39/chapter39
+   doc/chapter40/chapter40
+   doc/chapter41/chapter41
+   doc/chapter42/chapter42
+   doc/chapter43/chapter43
+   doc/chapter44/chapter44
+   doc/connect with us/connect_with_us
 
 .. toctree::
    :maxdepth: 1
-   :caption: 基础部分
+   :caption: 附录
    :numbered:
-
-   basis_part/motor_introduction
-   basis_part/classification_of_drives
-   basis_part/stm32_time_detailed
-   basis_part/DC_brushed_motor
-   basis_part/brushed_current_vbus_gather
-   basis_part/steering_gear_control
-   basis_part/stepper_motor
-   basis_part/brushless_DC_motor
-   basis_part/brushless_temp_vbus_gather
-   basis_part/detailed_encoder
 
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: 提高部分
+   :caption: 投稿精选
+   :titlesonly:
+
+   submission/rst-testfile
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: 贡献与投稿
    :numbered:
 
-   improve_part/relationship_between_control_system_and_motor
-   improve_part/PID_detailed
-   improve_part/PID_parameter_tuning
-   improve_part/use_of_encoder
-   improve_part/dc_motor_speed_loop_control
-   improve_part/dc_motor_current_loop_control
-   improve_part/dc_motor_pos_loop_control
-   improve_part/dc_motor_multi_loop_control
-   improve_part/step_motor_speed_loop_control
-   improve_part/step_motor_pos_loop_control
-   improve_part/step_motor_double_loop_control
-   improve_part/step_motor_T_speed
-   improve_part/step_motor_S_speed
-   improve_part/step_motor_spta_control
-   improve_part/step_motor_linear_interpolation
-   improve_part/step_motor_circular_interpolation
-   improve_part/BLDC_speed_loop_control
-   improve_part/ST-FOC-MC_SDK5x-overview
-   improve_part/X-CUBE-MCSDK_installation_use
+   contribute/how_to_contribute
 
 
 .. toctree::
@@ -82,6 +94,5 @@
 
    LICENSE
 
-.. toctree::
-   :maxdepth: 1
-   :caption: 发布文档到readthedoc
+
+

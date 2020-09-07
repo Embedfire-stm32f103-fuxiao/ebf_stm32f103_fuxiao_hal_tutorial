@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = '[野火]电机应用开发实战指南'
+project = '[野火]STM32 HAL库开发实战指南——基于野火指南者开发板'
 copyright = '2019, embedfire-野火 www.embedfire.com'
 author = 'embedfire-野火 www.embedfire.com'
 
@@ -50,7 +50,7 @@ language = 'zh_CN'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = []
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -64,3 +64,6 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# default hightlight languate
+highlight_language = "sh"
