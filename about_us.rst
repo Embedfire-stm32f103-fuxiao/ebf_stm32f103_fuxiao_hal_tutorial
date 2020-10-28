@@ -24,9 +24,10 @@
 - 论坛： http://www.firebbs.cn
 - github主页：https://github.com/Embedfire
 - gitee主页： https://gitee.com/wildfireteam
-- 淘宝： https://yehuosm.tmall.com
+- 天猫： https://yehuosm.tmall.com
 - 邮箱： embedfire@embedfire.com
 - 电话： 0769-33894118
+
 
 
 
