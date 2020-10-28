@@ -142,7 +142,7 @@ ESR 的入口地址，
 .. image:: media/image4.png
    :align: center
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码 14‑1 向量表
    :name: 代码清单14_1
 
@@ -230,7 +230,7 @@ BX       跳转到由寄存器/标号给出的地址，不用返回
 
 如果我们在使用某个外设的时候，开启了某个中断，但是又忘记编写配套的中断服务程序或者函数名写错，那当中断来临的时，程序就会跳转到启动文件预先写好的空的中断服务程序中，并且在这个空函数中无线循环，即程序就死在这里。
 
-.. code-block:: c
+.. code-block:: guess
 
     NMI_Handler     PROC    ;系统异常
                     EXPORT  NMI_Handler           [WEAK]
@@ -262,7 +262,7 @@ BX       跳转到由寄存器/标号给出的地址，不用返回
 
 ALIGN：对指令或者数据存放的地址进行对齐，后面会跟一个立即数。缺省表示4字节对齐。
 
-.. code-block:: c
+.. code-block:: guess
 
     ;用户栈和堆初始化,由C库函数_main来完成
         IF      :DEF:__MICROLIB  ;这个宏在KEIL里面开启

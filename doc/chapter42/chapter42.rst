@@ -164,7 +164,7 @@ STM32的内部FLASH包含主存储器、系统存储器以及选项字节区域�
 打开map文件后，查看文件最后部分的区域，可以看到一段以“Memory Map of the
 image”开头的记录(若找不到可用查找功能定位)，见 代码清单44_1_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 44‑1 map文件中的存储映像分布说明
    :name: 代码清单44_1
 

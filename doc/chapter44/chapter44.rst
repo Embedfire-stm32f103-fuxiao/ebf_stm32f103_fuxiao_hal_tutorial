@@ -1576,7 +1576,7 @@ STATUS AAAA     01         LEN      int16 ROL*100            SUM
                                     int16 YAW*100
                                     int32 ALT_USE
                                     u8 ARMED : A0加锁 A1解锁
-SENSER AAAA     02         LEN         \                       SUM
+SENSER AAAA     02         LEN         -                       SUM
                                     int16 ACC_X
                                     int16 ACC_Y
                                     int16 ACC_Z

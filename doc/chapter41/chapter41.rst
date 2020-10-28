@@ -106,7 +106,7 @@ x     0     内部FLASH      0x08000000 0x08000004
 加载文件(\*.sct)分配的，STM32F103的默认分散加载文件配置见
 代码清单43_1_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 43‑1 默认分散加载文件的空间配置
    :name: 代码清单43_1
 
@@ -231,7 +231,7 @@ for Target->linker”的选项见 图43_7_。
 为“SRAM_调试”工程专用的分散加载文件，该文件的内容见
 代码清单43_2_，若不了解分散加载文件的使用，请参考前面的章节。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 43‑2 分散加载文件配置(SRAM_调试.sct)
    :name: 代码清单43_2
 

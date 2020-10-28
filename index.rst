@@ -65,15 +65,6 @@
    :numbered:
 
 
-
-.. toctree::
-   :maxdepth: 1
-   :caption: 投稿精选
-   :titlesonly:
-
-   submission/rst-testfile
-
-
 .. toctree::
    :maxdepth: 1
    :caption: 贡献与投稿

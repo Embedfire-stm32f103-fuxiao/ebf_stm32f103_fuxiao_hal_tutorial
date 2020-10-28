@@ -17,8 +17,8 @@
 
 # -- Project information -----------------------------------------------------
 
-project = '[野火]STM32 HAL库开发实战指南——基于野火指南者开发板'
-copyright = '2019, embedfire-野火 www.embedfire.com'
+project = '[野火]STM32 HAL库开发实战指南——基于野火拂晓开发板'
+copyright = '2020, embedfire-野火 www.embedfire.com'
 author = 'embedfire-野火 www.embedfire.com'
 
 
@@ -67,3 +67,37 @@ html_static_path = ['_static']
 
 # default hightlight languate
 highlight_language = "sh"
+
+
+###########################################################################
+#                        embedfire pdf - configuration                    #
+###########################################################################
+
+project_language = 'en'
+
+# User's Sphinx configurations
+language_user = globals().get('language', None)
+latex_engine_user = globals().get('latex_engine', None)
+latex_elements_user = globals().get('latex_elements', None)
+
+latex_use_xindy = False
+
+chinese = any([
+    language_user in ('zh_CN', 'zh_TW'),
+    project_language in ('zh_CN', 'zh_TW'),
+])
+
+japanese = any([
+    language_user == 'ja',
+    project_language == 'ja',
+])
+
+if chinese:
+    latex_engine = latex_engine_user or 'xelatex'
+
+    latex_elements_rtd = {
+        'preamble': '\\usepackage[UTF8]{ctex}\n',
+    }
+    latex_elements = latex_elements_user or latex_elements_rtd
+elif japanese:
+    latex_engine = latex_engine_user or 'platex'

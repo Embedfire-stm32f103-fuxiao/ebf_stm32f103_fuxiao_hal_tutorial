@@ -194,6 +194,7 @@ LED GPIO初始化函数
         /*关闭RGB灯*/
         LED_RGBOFF;
     }
+
 整个函数与“构建库函数雏形”章节中的类似，主要区别是硬件相关的部分使用宏来代替，初始化GPIO端口时钟时也采用了STM32库函数，函数执行流程如下：
 
 (1) 使用GPIO_InitTypeDef定义GPIO初始化结构体变量，以便下面用于存储GPIO配置。
@@ -348,11 +349,11 @@ HAL库中同名函数的读者，会发现HAL库中的函数内容多了一些�
 但库文件只对“assert_failed”写了函数声明，没有写函数定义，实际用时需要用户来定义，我们一般会用printf函数来输出这些信息，
 见 代码清单12_7_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 12‑7 assert_failed 输出错误信息
    :name: 代码清单12_7
 
-    void assert_failed(uint8_t \* file, uint32_t line)
+    void assert_failed(uint8_t * file, uint32_t line)
     {
         printf(“/r/n 输入参数错误，错误文件名=%s,行号=%s”,file,line);
     }

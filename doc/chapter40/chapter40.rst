@@ -669,7 +669,7 @@ fromelf选项 可查看的信息         生成到配套资料里相应的文件
 直接打开“elf信息输出”目录下的bsp_led_o_elfInfo_v.txt文件，可看到
 代码清单40_1_ 中的内容。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑1 bsp_led.o文件的ELF文件头(可到“bsp_led_o_elfInfo_v.txt”文件查看)
    :name: 代码清单40_1
 
@@ -718,7 +718,7 @@ bytes”，且程序头所在的文件位置偏移也为“0”，这说明它�
 接下来打开“多彩流水灯_axf_elfInfo_v.txt”文件，查看工程的\*.axf文件的详细信息，见
 代码清单40_2_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑2 \*.axf文件中的elf文件头及程序头(可到“流水灯_axf_elfInfo_v.txt”文件查看)
    :name: 代码清单40_2
 
@@ -786,7 +786,7 @@ bytes”，它正是程序烧录到FLASH中需要占据的空间。
 通过对比\*.o文件及\*.axf文件的节区头部信息，可以清楚地看出这两种文件的区别，见
 代码清单40_3_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑3 \*.o文件的节区信息(“bsp_led_o_elfInfo_v.txt”文件)
    :name: 代码清单40_3
 
@@ -828,7 +828,7 @@ bytes)。
 当链接器链接时，根据这个节区头信息，在文件中找到它的主体内容，并根据它的类型，把它加入到主程序中，并分配实际地址，链接后生成的\*.axf文件，
 我们再来看看它的内容，见 代码清单40_4_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑4 \*.axf文件的节区信息(“流水灯_axf_elfInfo_v.txt”文件)
    :name: 代码清单40_4
 
@@ -882,7 +882,7 @@ ER_IROM1的地址为0x08000000，而RW_IRAM1的地址为0x20000000，它们正�
 使用fromelf的-c选项可以查看部分节区的主体信息，对于指令节区，可根据其内容查看相应的反汇编代码，打开“bsp_led_o_elfInfo_c.txt”文件可查看
 这些信息，见 代码清单40_5_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑5 \*.o文件的LED_GPIO_Config节区及反汇编代码(bsp_led_o_elfInfo_c.txt文件)
    :name: 代码清单40_5
 
@@ -917,7 +917,7 @@ ER_IROM1的地址为0x08000000，而RW_IRAM1的地址为0x20000000，它们正�
 接下来我们打开“流水灯_axf_elfInfo_c.txt”文件，查看*.axf文件中，ER_IROM1节区中对应LED_GPIO_Config的内容，见
 代码清单40_6_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑6*.axf文件的LED_GPIO_Config反汇编代码(流水灯_axf_elfInfo_c.txt文件)
    :name: 代码清单40_6
 
@@ -956,7 +956,7 @@ ER_IROM1的地址为0x08000000，而RW_IRAM1的地址为0x20000000，它们正�
 通过查看“流水灯_axf_elfInfo_c.txt”的反汇编信息，了解到程序中具有一段名为“__scatterload”的分散加载代码，见
 代码清单40_7_，它是由armlink链接器自动生成的。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑7 分散加载代码(多彩流水灯_axf_elfInfo_c.txt文件)
    :name: 代码清单40_7
 
@@ -1006,7 +1006,7 @@ ER_IROM1的地址为0x08000000，而RW_IRAM1的地址为0x20000000，它们正�
 代码清单40_8_，__main在启动文件中的“Reset_Handler”会被调用，因而，在主体程序执行前，已经完成了分散加载过程。
 
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑8 __main的反汇编代码（部分，流水灯_axf_elfInfo_c.txt文件）
    :name: 代码清单40_8
 
@@ -1109,7 +1109,7 @@ hex是Intel公司制定的一种使用ASCII文本记录机器码或常量数据�
 一个hex文件由多条记录组成，而每条记录由五个部分组成，格式形如“\ **:llaaaatt[dd…]**\ cc”，例如本“多彩流水灯”工程生成的hex文件前几条记录见
 代码清单40_9_ 。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑9 Hex文件实例(流水灯.hex文件，可直接用记事本打开)
    :name: 代码清单40_9
 
@@ -1288,7 +1288,7 @@ map文件是由链接器生成的，它主要包含交叉链接信息，查看�
 打开“流水灯.map”文件，可看到它的第一部分——节区的跨文件引用(Section Cross
 References)，见 代码清单40_10_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑10 节区的跨文件引用(部分，流水灯.map文件)
    :name: 代码清单40_10
 
@@ -1337,7 +1337,7 @@ symbol xxxx from xxx.o）。
 map文件的第二部分是删除无用节区的说明(Removing Unused input sections
 from the image.)，见 代码清单40_11_ 。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑11 删除无用节区(部分，流水灯.map文件)
    :name: 代码清单40_11
 
@@ -1376,7 +1376,7 @@ stm32f10x_adc.o的各个节区都被删除了，因为在我们这个工程中�
 
 map文件的第三部分是符号映像表(Image Symbol Table)，见 代码清单40_12_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑12 符号映像表(部分，流水灯.map文件)
    :name: 代码清单40_12
 
@@ -1427,7 +1427,7 @@ Code类型，大小为90字节，它所在的节区为bsp_led.o文件的i.LED_GP
 map文件的第四部分是存储器映像索引(Memory Map of the image)，见
 代码清单40_13_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑13 存储器映像索引(部分，流水灯.map文件)
    :name: 代码清单40_13
 
@@ -1475,7 +1475,7 @@ map文件的第四部分是存储器映像索引(Memory Map of the image)，见
 map文件的最后一部分是包含映像组件大小的信息(Image component
 sizes)，这也是最常查询的内容，见 代码清单40_14_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑14 映像组件大小(部分，多彩流水灯.map文件)
    :name: 代码清单40_14
 
@@ -1543,7 +1543,7 @@ loading)，链接器根据该文件的配置分配各个节区地址，生成分
 下面先来看看MDK默认使用的sct文件，在Output目录下可找到“流水灯.sct”，该文件记录的内容见
 代码清单40_15_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑15 默认的分散加载文件内容(“流水灯.sct”)
    :name: 代码清单40_15
 
@@ -1580,7 +1580,7 @@ sct文件中主要包含描述加载域及执行域的部分，一个文件中�
 
 sct文件的加载域格式见 代码清单40_16_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑16 加载域格式
    :name: 代码清单40_16
 
@@ -1607,7 +1607,7 @@ sct文件的加载域格式见 代码清单40_16_。
 
 sct文件的执行域格式见 代码清单40_17_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑17 执行域格式
    :name: 代码清单40_17
 
@@ -1627,7 +1627,7 @@ sct文件的执行域格式见 代码清单40_17_。
 配合加载域及执行域的配置，在相应的域配置“输入节区描述”即可控制该节区存储到域中，其格式见
 代码清单40_18_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑18 输入节区描述的几种格式
    :name: 代码清单40_18
 
@@ -1685,7 +1685,7 @@ ENTRY          节区的入口点
    例如示例文件中使用“(RESET,+First)”选择了RESET节区，并要求把它放置到本区域第一个位置，而RESET是工程启动代码中定义的向量表，见
    代码清单40_19_，该向量表中定义的堆栈顶和复位向量指针必须要存储在内部FLASH的前两个地址，这样STM32才能正常启动，所以必须使用FIRST控制它们存储到首地址。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑19 startup_stm32f10x.s文件中定义的RESET区(部分)
    :name: 代码清单40_19
 
@@ -1780,7 +1780,7 @@ Areas)两类，即ROM和RAM，而且它们又细分成了片外存储器(off-chi
 
 图 40-51 修改IRAM1的基地址及仅使用IRAM2的配置
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑20 修改了IRAM1基地址后的sct文件内容
    :name: 代码清单40_20
 
@@ -1826,7 +1826,7 @@ Data内容(RW-data)，点击下拉菜单可以找到在前面Target页面配置�
 Data属性的内容分配到了IRAM2存储器(在Target标签页中我们勾选了IRAM1及IRAM2)，当在bsp_led.c文件定义了一些RW-data内容时(如初值非0的全局变量)，
 该变量将会被分配到IRAM2空间，配置完成后点击OK，然后编译工程，查看到的sct文件内容见 代码清单40_21_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑21 修改bsp_led.c配置后的sct文件
    :name: 代码清单40_21
 
@@ -1867,7 +1867,7 @@ Data属性的内容分配到了IRAM2存储器(在Target标签页中我们勾选�
 到外部扩展的存储器，而sct文件存储器管理取代或改进了这种地址分配方式。在此处先补充一下关键字“__attribute__”的使用说明，见
 代码清单40_22_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40_22 直接指定变量地址
    :name: 代码清单40_22
 
@@ -1928,7 +1928,7 @@ Dialog”选项被取消勾选，取消勾选后可直接点击“Edit”按钮�
 为了解决这个问题，可修改工程的startup_stm32f10x.s启动文件，见
 代码清单40_23_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑23 修改启动文件中的Reset_handler函数(startup_stm32f10x.s文件)
    :name: 代码清单40_23
 
@@ -1967,7 +1967,7 @@ sct文件初步应用
 接下来修改sct文件，控制使得在C源文件中定义的全局变量都自动由链接器分配到“指定的存储空间”（0x20005000至0x2000C000地址的内部SRAM空间），
 见 代码清单40_24_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑24 配置sct文件(SRAM.sct文件)
    :name: 代码清单40_24
 
@@ -2220,7 +2220,7 @@ Dialog”勾选后，在MDK的Target对话框及文件配置的存储器分布�
 中的Reset_handler函数，在__main函数之前调用该存储器的初始化函数使硬件正常运转，见
 代码清单40_26_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑26 修改启动文件中的Reset_handler函数(startup_stm32f10x.s文件)
    :name: 代码清单40_26
 
@@ -2252,7 +2252,7 @@ sct文件配置
 
 接下来分析本实验中的sct文件配置与上一小节有什么差异，见 代码清单40_27_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑27 本实验的sct文件内容(SRAM.sct)
    :name: 代码清单40_27
 
@@ -2435,7 +2435,7 @@ testValue \__EXRAM =7
 堆节区就会默认分配到内部SRAM，“指定的存储空间”仅选择EXRAM节区的内容进行分配，见
 代码清单40_30_。
 
-.. code-block:: c
+.. code-block:: guess
    :caption: 代码清单 40‑30 按默认配置分配堆区到内部SRAM的sct文件范例
    :name: 代码清单40_30
 
